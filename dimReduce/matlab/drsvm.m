@@ -1,7 +1,9 @@
-function [ B, H, w ] = drsvm( Y, X, k, lambda1, lambda2, maxiter, Ytest )
+function [ B, H, w, acc_tr_list, acc_te_list ] = drsvm( Y, X, k, lambda1, lambda2, lambda3, lambda4, maxiter, Ytest )
 %DRSVM Summary of this function goes here
 %   min sum l(h_i, w) + lambda1/2 \|w\|_2^2 + lambda2/2 \|X - BH\|_F^2 +
 %   lambda3 \|B\|_F^2 + lambda4 \|H\|_F^2
+acc_tr_list = [];
+acc_te_list = [];
 [m, n] = size(X);
 B = randn(m, k);
 H = randn(k, n);
@@ -10,12 +12,12 @@ ntr = size(Y, 1);
 %XTX = X'*X;
 trXTX = norm(X, 'fro')^2;
 clearvars XTX;
-obj(Y, X, B, H, w, lambda1, lambda2, trXTX)
+%obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
 sgd_t = 1;
 for iter = 1:maxiter
     fprintf('%d iteration.\n', iter);
     %Update B    
-    tic;
+    %tic;
     %HHT = H*H';
     %XHT = X*H';
     %for i = 1:k,
@@ -23,12 +25,12 @@ for iter = 1:maxiter
     %end
     HHT = H*H';
     HXT = H*X';
-    BT = HHT \ HXT;
+    BT = (HHT + lambda3/lambda2*eye(k)) \ HXT;
     B = BT';
     %toc
-    disp('Update B')
-    toc
-    obj(Y, X, B, H, w, lambda1, lambda2, trXTX)
+    %disp('Update B')
+    %toc
+    %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
 
     %Update Htest
     %BTB = B'*B;
@@ -38,26 +40,25 @@ for iter = 1:maxiter
     %obj(Y, X, B, H, w, lambda1, lambda2, trXTX)
     
     %Update Htrain
-    tic;
+    %tic;
     BTB = B'*B;
     disp('BTB');
     
     XtrTB = X(:,1:ntr)'*B;
     XteTB = X(:,ntr+1:n)'*B;
-    toc
+    %toc
     for i = 1:k,
    %    disp('frist');
    %    tic
        %bjnorm = norm(B(:,i), 'fro')^2;
        bjnorm = BTB(i,i);
        %tic;
-       sol1 = H(i,1:ntr)' + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / bjnorm;
-       sol2 =  H(i,1:ntr)' + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / bjnorm  + w(i,1)*Y/(lambda2*bjnorm);
+       r = lambda4/lambda2;
+       sol1 = H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r);
+       sol2 =  H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r)  + w(i,1)*Y/(lambda2*bjnorm);
        %disp('calculating sol');
        
-       
-       H(i,ntr+1:n) = H(i,ntr+1:n) + (XteTB(:,i)' - BTB(:,i)'*H(:,ntr+1:n) ) / bjnorm; 
-       
+       H(i,ntr+1:n) = H(i,ntr+1:n)*bjnorm/(bjnorm + r) + (XteTB(:,i)' - BTB(:,i)'*H(:,ntr+1:n) ) / (bjnorm + r); 
        
        idx = [1:k];
        idx(i) = [];
@@ -90,13 +91,13 @@ for iter = 1:maxiter
        %fprintf('i = %d \n', i);       
     end
     
-    disp('Update Htr');
-    toc
-    obj(Y, X, B, H, w, lambda1, lambda2, trXTX)
+    %disp('Update Htr');
+    %toc
+    %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
 
 
     %Update w  Pegasos algorithm
-    tic
+    %tic
     %size(Y)
     %size(H(:,1:ntr)')
     par = ['-c ' num2str(1/lambda1) ' -s 3' ];
@@ -121,14 +122,16 @@ for iter = 1:maxiter
 %         subgrad = ( Y(i)*w'*H(:,i) <= 1 )*(-Y(i)*H(:,i)) + lambda1*w;
 %         w = w - eta*subgrad;
 %     end
-    disp('Update w')
-    toc
-    obj(Y, X, B, H, w, lambda1, lambda2, trXTX)
+    %disp('Update w')
+    %toc
+    %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
     
     acc_tr = pred(Y, H(:,1:ntr), w);
-    fprintf('training pred accuracy: %d\n', acc_tr)
+    acc_tr_list(end+1) = acc_tr;
+    %fprintf('training pred accuracy: %d\n', acc_tr)
     acc_te = pred(Ytest, H(:,ntr+1:n), w);
-    fprintf('testing pred accuracy: %d\n', acc_te)
+    acc_te_list(end+1) = acc_te;
+    %fprintf('testing pred accuracy: %d\n', acc_te)
 end
 
 
