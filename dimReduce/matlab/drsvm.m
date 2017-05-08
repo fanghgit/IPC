@@ -55,7 +55,7 @@ for iter = 1:maxiter
        %tic;
        r = lambda4/lambda2;
        sol1 = H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r);
-       sol2 =  H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r)  + w(i,1)*Y/(lambda2*bjnorm);
+       sol2 =  H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r)  + w(i,1)*Y/(lambda2*(bjnorm + r));
        %disp('calculating sol');
        
        H(i,ntr+1:n) = H(i,ntr+1:n)*bjnorm/(bjnorm + r) + (XteTB(:,i)' - BTB(:,i)'*H(:,ntr+1:n) ) / (bjnorm + r); 
