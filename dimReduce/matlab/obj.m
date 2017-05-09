@@ -1,10 +1,10 @@
-function [ res ] = obj( Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4,trXTX )
+function [ res ] = obj( Y, X, tridx, teidx, B, H, w, lambda1, lambda2, lambda3, lambda4,trXTX )
 %OBJ Summary of this function goes here
 %   Detailed explanation goes here
 %[m, n] = size(X);
 ntr = size(Y,1);
 %loss
-l = sum( max(0, 1 - Y.*(H(:,1:ntr)'*w)) );
+l = sum( max(0, 1 - Y.*(H(:,tridx)'*w)) );
 BTB = B'*B;
 HHT = H*H';
 norm_approx = trXTX - 2*trace(H*X'*B) + trace(BTB*HHT); 

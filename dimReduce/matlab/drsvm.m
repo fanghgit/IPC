@@ -1,4 +1,4 @@
-function [ B, H, w, acc_tr_list, acc_te_list ] = drsvm( Y, X, k, lambda1, lambda2, lambda3, lambda4, maxiter, Ytest )
+function [ B, H, w, acc_tr_list, acc_te_list ] = drsvm( Y, X, tridx, teidx, k, lambda1, lambda2, lambda3, lambda4, maxiter, Ytest )
 %DRSVM Summary of this function goes here
 %   min sum l(h_i, w) + lambda1/2 \|w\|_2^2 + lambda2/2 \|X - BH\|_F^2 +
 %   lambda3 \|B\|_F^2 + lambda4 \|H\|_F^2
@@ -13,6 +13,8 @@ ntr = size(Y, 1);
 trXTX = norm(X, 'fro')^2;
 clearvars XTX;
 %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
+unknown_idx = [1:n];
+unknown_idx(tridx) = [];
 sgd_t = 1;
 for iter = 1:maxiter
     fprintf('%d iteration.\n', iter);
@@ -44,8 +46,8 @@ for iter = 1:maxiter
     BTB = B'*B;
     disp('BTB');
     
-    XtrTB = X(:,1:ntr)'*B;
-    XteTB = X(:,ntr+1:n)'*B;
+    XtrTB = X(:,tridx)'*B;
+    XteTB = X(:,unknown_idx)'*B;
     %toc
     for i = 1:k,
    %    disp('frist');
@@ -54,15 +56,15 @@ for iter = 1:maxiter
        bjnorm = BTB(i,i);
        %tic;
        r = lambda4/lambda2;
-       sol1 = H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r);
-       sol2 =  H(i,1:ntr)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,1:ntr)'*(BTB(:,i))  ) / (bjnorm + r)  + w(i,1)*Y/(lambda2*(bjnorm + r));
+       sol1 = H(i,tridx)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,tridx)'*(BTB(:,i))  ) / (bjnorm + r);
+       sol2 =  H(i,tridx)'*bjnorm/(bjnorm + r) + ( XtrTB(:,i) - H(:,tridx)'*(BTB(:,i))  ) / (bjnorm + r)  + w(i,1)*Y/(lambda2*(bjnorm + r));
        %disp('calculating sol');
        
-       H(i,ntr+1:n) = H(i,ntr+1:n)*bjnorm/(bjnorm + r) + (XteTB(:,i)' - BTB(:,i)'*H(:,ntr+1:n) ) / (bjnorm + r); 
+       H(i,unknown_idx) = H(i,unknown_idx)*bjnorm/(bjnorm + r) + (XteTB(:,i)' - BTB(:,i)'*H(:,unknown_idx) ) / (bjnorm + r); 
        
        idx = [1:k];
        idx(i) = [];
-       thresold = (1 - Y.*(H(idx,1:ntr)' * w(idx,:) )) ./ (Y*w(i, 1));
+       thresold = (1 - Y.*(H(idx,tridx)' * w(idx,:) )) ./ (Y*w(i, 1));
        %toc
        %    toc
     %   disp('second')
@@ -87,34 +89,37 @@ for iter = 1:maxiter
        sol(pos3) = thresold(pos3);
        
       % toc
-       H(i,1:ntr) = sol;
+       H(i,tridx) = sol;
        %fprintf('i = %d \n', i);       
     end
     
     %disp('Update Htr');
     %toc
-    %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
+    obj(Y, X, tridx, teidx, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
 
 
     %Update w  Pegasos algorithm
     %tic
     %size(Y)
     %size(H(:,1:ntr)')
-    par = ['-c ' num2str(1/lambda1) ' -s 3' ];
-    model = train(Y, sparse(H(:,1:ntr)'), par);
+    l = sum( max(0, 1 - Y.*(H(:,tridx)'*w)) ) + lambda1/2*w'*w
+    par = ['-c ' num2str(1/lambda1) ' -s 2' ];
+    keyboard
+    model = train(Y, sparse(H(:,tridx)'), par, w);
+    
     w = model.w';
     %size(w)
-%     T = 1*ntr;
-%     for t = 1:T,
-%         ti = randi(ntr);
-%         eta = 1/(sgd_t*lambda1+1e1);
-%         if Y(ti,1)*(w'*H(:,ti)) < 1,
-%             w = (1 - eta*lambda1) * w  + eta*Y(ti,1)*H(:,ti); 
-%         else
-%             w = (1 - eta*lambda1) * w;
-%         end
+    % T = 5*ntr;
+    % for t = 1:T,
+    %     ti = randi(ntr);
+    %     eta = 1/(t*ntr*lambda1);
+    %     if Y(ti,1)*(w'*H(:,ti)) < 1,
+    %         w = (1 - eta*lambda1) * w  + eta*Y(ti,1)*H(:,ti); 
+    %     else
+    %         w = (1 - eta*lambda1) * w;
+    %     end
 %         sgd_t = sgd_t + 1;
-%     end
+    % end
   
     
 %     eta = 1e-1;
@@ -122,14 +127,15 @@ for iter = 1:maxiter
 %         subgrad = ( Y(i)*w'*H(:,i) <= 1 )*(-Y(i)*H(:,i)) + lambda1*w;
 %         w = w - eta*subgrad;
 %     end
-    %disp('Update w')
+    disp('Update w')
     %toc
-    %obj(Y, X, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
+    l = sum( max(0, 1 - Y.*(H(:,tridx)'*w)) ) + lambda1/2*w'*w
+    obj(Y, X, tridx, teidx, B, H, w, lambda1, lambda2, lambda3, lambda4, trXTX)
     
-    acc_tr = pred(Y, H(:,1:ntr), w);
+    acc_tr = pred(Y, H(:,tridx), w)
     acc_tr_list(end+1) = acc_tr;
     %fprintf('training pred accuracy: %d\n', acc_tr)
-    acc_te = pred(Ytest, H(:,ntr+1:n), w);
+    acc_te = pred(Ytest, H(:,teidx), w)
     acc_te_list(end+1) = acc_te;
     %fprintf('testing pred accuracy: %d\n', acc_te)
 end

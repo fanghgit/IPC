@@ -2270,9 +2270,11 @@ model* train(const problem *prob, const parameter *param, double *initial_w)  //
 	if(check_regression_model(model_))
 	{
 		model_->w = Malloc(double, w_size);
-		for(i=0; i<w_size; i++)
+		for(i=0; i<w_size; i++){
+			printf("%f, ", initial_w[i]);
 			model_->w[i] = initial_w[i];   //add initialization
 			//model_->w[i] = 0;
+		}
 		model_->nr_class = 2;
 		model_->label = NULL;
 		train_one(prob, param, model_->w, 0, 0);
