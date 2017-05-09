@@ -2252,7 +2252,7 @@ static double calc_start_C(const problem *prob, const parameter *param)
 //
 // Interface functions
 //
-model* train(const problem *prob, const parameter *param)
+model* train(const problem *prob, const parameter *param, double *initial_w)  // add w
 {
 	int i,j;
 	int l = prob->l;
@@ -2271,7 +2271,8 @@ model* train(const problem *prob, const parameter *param)
 	{
 		model_->w = Malloc(double, w_size);
 		for(i=0; i<w_size; i++)
-			model_->w[i] = 0;
+			model_->w[i] = initial_w[i];   //add initialization
+			//model_->w[i] = 0;
 		model_->nr_class = 2;
 		model_->label = NULL;
 		train_one(prob, param, model_->w, 0, 0);
@@ -2447,7 +2448,8 @@ void cross_validation(const problem *prob, const parameter *param, int nr_fold, 
 			subprob.y[k] = prob->y[perm[j]];
 			++k;
 		}
-		struct model *submodel = train(&subprob,param);
+		double *tmp;
+		struct model *submodel = train(&subprob,param,tmp);
 		for(j=begin;j<end;j++)
 			target[perm[j]] = predict(submodel,prob->x[perm[j]]);
 		free_and_destroy_model(&submodel);
@@ -2537,7 +2539,8 @@ void find_parameter_C(const problem *prob, const parameter *param, int nr_fold, 
 			int end = fold_start[i+1];
 
 			param1.init_sol = prev_w[i];
-			struct model *submodel = train(&subprob[i],&param1);
+			double *tmp;
+			struct model *submodel = train(&subprob[i],&param1,tmp);
 
 			int total_w_size;
 			if(submodel->nr_class == 2)
