@@ -1,4 +1,4 @@
-#include <math.h>
+ #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -389,6 +389,10 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	// fix random seed to have same results for each run
 	// (for cross validation)
 	srand(1);
+	if(nrhs < 4){
+		mexPrintf("Not enough input\n");
+		return;
+	}
 
 	if(nlhs > 1)
 	{
@@ -471,8 +475,9 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		else
 		{
 			const char *error_msg;
-
-			model_ = train(&prob, &param);
+			double *initial_w = mxGetPr(prhs[3]);
+			
+			model_ = train(&prob, &param, &initial_w);  //add initial_w
 			error_msg = model_to_matlab_structure(plhs, model_);
 			if(error_msg)
 				mexPrintf("Error: can't convert libsvm model to matrix structure: %s\n", error_msg);
