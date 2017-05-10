@@ -476,9 +476,16 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		{
 			const char *error_msg;
 			double *initial_w = mxGetPr(prhs[3]);
-			for(int ii =0; ii < 5; ii++)
-				printf("%f, ", initial_w[ii]);
-			model_ = train(&prob, &param, initial_w);  //add initial_w
+			int w_size = prob.n;
+			//printf("w size: %i", w_size);
+			param.init_sol = Malloc(double, w_size);
+			for(int ii = 0; ii < w_size; ii++){
+				param.init_sol[ii] = initial_w[ii];
+			}
+			
+			//for(int ii =0; ii < 5; ii++)
+			//	printf("%f, ", initial_w[ii]);
+			model_ = train(&prob, &param);  //add initial_w
 			error_msg = model_to_matlab_structure(plhs, model_);
 			if(error_msg)
 				mexPrintf("Error: can't convert libsvm model to matrix structure: %s\n", error_msg);
