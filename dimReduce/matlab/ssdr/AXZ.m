@@ -8,7 +8,7 @@ function y=AXZ(Z)
         y3 = zeros(size(y1,1),1);
 	y3(1:size(M1,1))= M1(1,1)*sum(y1(1:size(M1,2))) + C1(1,1)*sum(y1(size(M1,2)+1:m)) + O1(1,1)*sum(y1(m+1:end));
 	y3(size(M1,1)+1:m)= C2(1,1)*sum(y1(1:size(C2,2))) + M2(1,1)*sum(y1(size(C2,2)+1:m)) + O1(1,1)*sum(y1(m+1:end));
-	y3(n-m:end)=O1(1,1)*sum(y1); 
+	y3(m+1:end)=O1(1,1)*sum(y1); 
 	y4 = y2 - y3; 
 	%
 	y = X * y4 ;
