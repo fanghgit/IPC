@@ -1,9 +1,15 @@
-filepath = '../testdata/rcv1/';
+global X D M1 M2 C1 C2 O1
+addpath PROPACK
+filepath = '../testdata/news20/';
 split = '0.1/';
 [label,feature]= libsvmread([filepath split 'trtr']);
 [vl,vf]= libsvmread([filepath split 'vtr']);
 [el,ef]= libsvmread([filepath split 'te']);
-totall = [label;vl;el;];
+all=[label feature];
+all = sortrows(all);
+label = all(:,1);
+feature = all(:,2:end);
+totall = [label;vl;el];
 maxf = max([size(feature,2),size(vf,2),size(ef,2)]);
 feature(size(feature,1),maxf)=0;
 vf(size(vf,1),maxf)=0;
@@ -13,36 +19,32 @@ alpha = 1;
 beta = 20;
 n = size(totall,1);
 m = size(label,1);
-S = ones(n)/(n*n);
-nc = 0;
-nm = 0;
-for i=1:m
-  for j=i+1:m
-    if label(i)==label(j)
-      nm = nm+1;
-    else
-      nc = nc+1;
-    end 
-  end
-end
+none = sum((label==1));
+nnone = m - none;
+nm = none*(none-1)/2 + nnone*(nnone-1)/2;
+nc = none*nnone;
+no = n - m;
 
+M1 = ones(none,none)*(1/(n*n)-beta/nm);
+C1 = ones(none,nnone)*(1/(n*n)+alpha/nc);
+M2 = ones(nnone,nnone)*(1/(n*n)-beta/nm);
+C2 = ones(nnone,none)*(1/(n*n)+alpha/nc);
+O1 = ones(m,n-m)/(n*n);
+O2 = ones(n-m,m)/(n*n);
+O3 = ones(n-m,n-m)/(n*n);
 
-for i=1:m
-  for j=i+1:m
-    if label(i)==label(j)
-      S(i,j) = S(i,j) + alpha/nc;
-    else
-      S(i,j) = S(i,j) - beta/nm;
-    end 
-  end
-end
+S1 = [M1 C1;M2 C2];
+S = [S1 O1; O2 O3];
 
-S = S + S';
 D = diag(sum(S,2));
-L = D - S;
-L = sparse(L);
+D = sparse(D);
+X = totalf;
+
+%L = D - S;
+%L = sparse(L);
 % rank k
-k = 10; 
+k = 10;
+[V,D] = eigs('AXZ',size(X,1),k);
 %W = randn(size(totalf,1),k);
 %XLXT = totalf*L*totalf';
 %[V,D] = eigs(XLXT);
