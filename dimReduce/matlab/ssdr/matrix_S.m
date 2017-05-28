@@ -43,8 +43,11 @@ X = totalf;
 %L = D - S;
 %L = sparse(L);
 % rank k
-k = 10;
+k = 100;
 [V,D] = eigs('AXZ',size(X,1),k);
 %W = randn(size(totalf,1),k);
 %XLXT = totalf*L*totalf';
 %[V,D] = eigs(XLXT);
+newf = feature*V;
+model = train(full(label), newf);
+[~,acc,~] = predict(vl,sparse(vf*V),model);
