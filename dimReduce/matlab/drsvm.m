@@ -89,25 +89,25 @@ for iter = 1:maxiter
        neg_deno = Y*w(i,1) < 0;
        zero_deno = Y*w(i,1) == 0;
        if sum(zero_deno) > 0,
-          error('error: zero denominator') 
-       end
+          H(i,tridx) = sol;
+       else
        %size(sol1)
        %ii = sol1 >= thresold;
-       pos1 = ( pos_deno & (sol1 >= thresold) ) | (neg_deno & (sol1 <= thresold));
-       pos2 = ( pos_deno & (sol2 < thresold) ) | (neg_deno & (sol2 > thresold));
-       if( sum(pos1 & pos2) ~= 0 ),
-          sum(pos1 & pos2)
-          error('error: pos1 & pos2 in not empty') 
-       end
-       pos3 = ~(pos1) & ~(pos2);
-       sol(pos1) = sol1(pos1);
-       sol(pos2) = sol2(pos2);
-       sol(pos3) = thresold(pos3);
-       
+           pos1 = ( pos_deno & (sol1 >= thresold) ) | (neg_deno & (sol1 <= thresold));
+           pos2 = ( pos_deno & (sol2 < thresold) ) | (neg_deno & (sol2 > thresold));
+           if( sum(pos1 & pos2) ~= 0 ),
+              sum(pos1 & pos2)
+              error('error: pos1 & pos2 in not empty') 
+           end
+           pos3 = ~(pos1) & ~(pos2);
+           sol(pos1) = sol1(pos1);
+           sol(pos2) = sol2(pos2);
+           sol(pos3) = thresold(pos3);
       % toc
-       H(i,tridx) = sol;
+           H(i,tridx) = sol;
+       end
        if nonneg,
-	   H(i,tridx) = max(0, H(i,tridx));
+	   H(i,tridx) = max(0, H(i, tridx));
        end
        %fprintf('i = %d \n', i);       
     end
