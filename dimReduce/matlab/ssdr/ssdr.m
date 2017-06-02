@@ -1,10 +1,14 @@
 global X m n none nnone m1 c1 o
 addpath PROPACK
-filepath = '../testdata/rcv1/';
-split = '0.8/';
-[label,feature]= libsvmread([filepath split 'trtr']);
-[vl,vf]= libsvmread([filepath split 'vtr']);
-[el,ef]= libsvmread([filepath split 'te']);
+expresult=[];
+filepath = '../testdata/webspam/';
+ratio_list=[0.01,0.05,0.1,0.2,0.4,0.8];
+%parpool(4)
+for ind = 1:6
+	ratio = ratio_list(ind)
+[label,feature]= libsvmread([filepath num2str(ratio) '/' 'trtr']);
+[vl,vf]= libsvmread([filepath num2str(ratio) '/' 'vtr']);
+[el,ef]= libsvmread([filepath num2str(ratio) '/' 'te']);
 all=[label feature];
 all = sortrows(all);
 label = all(:,1);
@@ -27,11 +31,9 @@ X = totalf;
 
 alphal = [0.1,1,10,100];
 betal = [0.2,2,20,200];
-accl = zeros(4,4);
-teaccl = zeros(4,4);
 
-for i=1:4
-i 
+for i=1:4 
+i
 for j=1:4
 alpha = alphal(i);
 beta = betal(j);
@@ -56,18 +58,55 @@ o = 1/(n*n);
 
 %L = D - S;
 %L = sparse(L);
-% rank k
-k = 10;
-[V,D] = eigs('AXZ',size(X,1),k);
+% rank r
+r = 10;
+[V,D] = eigs('AXZ',size(X,1),r);
 %W = randn(size(totalf,1),k);
 %XLXT = totalf*L*totalf';
 %[V,D] = eigs(XLXT);
-newf = feature*V;
-model = train(full(label), sparse(newf));
-[~,acc,~] = predict(vl,sparse(vf*V),model);
-[~,teacc,~] = predict(el,sparse(ef*V),model);
-accl(i,j)=acc(1);
-teaccl(i,j)=teacc(1);
+%for index = 1:4
+newf = sparse(feature*V);
+nvf = sparse(vf*V);
+nef = sparse(ef*V);
+%newfp = py.numpy.reshape(newf(:)',int32(size(newf)),'F');
+%nvfp = py.numpy.reshape(nvf(:)',int32(size(nvf)),'F');
+%nep = py.numpy.reshape(nef(:)',int32(size(nef)),'F');
+%labelp = py.list(label');
+%elp = py.list(el');
+%neigh = py.sklearn.neighbors.KNeighborsClassifier(int32(nn(1)));
+%neigh.fit(newfp,labelp);
+%keyboard;
+libsvmwrite([filepath num2str(ratio) '/' 'newtf' '_' num2str(i) '_' num2str(j)],label,newf);
+libsvmwrite([filepath num2str(ratio) '/' 'vtf' '_' num2str(i) '_' num2str(j)],vl,nvf);
+libsvmwrite([filepath num2str(ratio) '/' 'tef' '_' num2str(i) '_' num2str(j)],el,nef);
+
+
+
+
+
+%nn = [1,2,3,4];
+%for index=1:4
+%Mdl = fitcknn(newf,label,'NumNeighbors',nn(index));
+%cor =0;
+%ecor = 0;
+%nvf = vf*V;
+%nef = ef*V;
+%for k=1:size(vf,1)
+%	if (predict(Mdl,nvf(k,:))== vl(k))
+%		cor=cor+1;
+%	end
+%end
+%for k=1:size(ef,1)
+%	if (predict(Mdl,nef(k,:))== el(k))
+%		ecor = ecor +1;
+%	end
+%end
+%acc = cor/size(vf,1);
+%teacc = ecor / size(ef,1);
+%model = train(full(label), sparse(newf));
+%[~,acc,~] = predict(vl,sparse(vf*V),model);
+%[~,teacc,~] = predict(el,sparse(ef*V),model);
+%expresult(end+1,:) = [ratio,alpha,beta,acc(1),teacc(1)];
 end
 end
-save('r0.8','accl','teaccl');
+end
