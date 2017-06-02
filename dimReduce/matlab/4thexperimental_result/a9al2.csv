@@ -1,4 +1,4 @@
-ratio,lambda1,lambda2,lambda3,svm_acc_te,dr_acc_vtr,dr_acc_te,acc_trtr,acc_vtr,acc_te,
+ratio,lambda1,lambda2,lambda3,svm_acc_te,dr_acc_vtr,dr_acc_te,acc_trtr,acc_vtr,acc_te
 0.8,0.1,0.1,0.1,84.707,83.327,82.404,1,0.80269,0.79292
 0.8,0.1,0.1,1,84.707,83.327,82.404,1,0.81536,0.80264
 0.8,0.1,0.1,10,84.707,83.327,82.404,1,0.83417,0.82076
