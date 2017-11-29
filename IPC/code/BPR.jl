@@ -191,7 +191,8 @@ function compute_pairwise_error(U, V, Y, r, d1, d2, rows_t, vals_t, cols_t, hr_k
 end
 
 function precompute_ss(X, d1, d2, prob, rows, cols, vals, epochSize)
-    s_cols = sample([1:d1;], WeightVec(prob), Int64(epochSize));
+    #s_cols = sample([1:d1;], WeightVec(prob), Int64(epochSize));
+    s_cols = sample([1:d1;], Int64(epochSize));
     ss = []
     for i in s_cols
         rg = nzrange(X, i);
@@ -211,6 +212,7 @@ function precompute_ss(X, d1, d2, prob, rows, cols, vals, epochSize)
 end
 
 #BPR_full("data/ml-1m/train_positive.csv", "data/ml-1m/test.csv", 100, 0.01, 0, 0.01)
+#BPR_full("data/sub_ml-1m/train_positive.csv", "data/sub_ml-1m/test.csv", 100, 0.1, 0, 0.01)
 #BPR_full("data/ml-10M100K/train_positive.csv", "data/ml-10M100K/test.csv", 100, 7000, 0, 0.01)
 function BPR_full(train, test, r, lambda, epochSize, stepsize)
     X = readdlm(train, ',' );
@@ -334,6 +336,7 @@ end
 
 
 function precompute_subsample_ss(X_pos, X_neg, d1, d2, prob, rows_pos, rows_neg, epochSize)
+    #s_cols = sample([1:d1;], WeightVec(prob), Int64(epochSize));
     s_cols = sample([1:d1;], Int64(epochSize));
     ss = []
     for i in s_cols
@@ -351,6 +354,8 @@ end
 
 #ml-1m: lambda = 0.01
 #BPR_subsample("data/ml-1m/train_positive.csv", "data/ml-1m/negsamples1.csv", "data/ml-1m/test.csv", 100, 0.01, 0, 0.01)
+#BPR_subsample("data/sub_ml-1m/train_positive.csv", "data/sub_ml-1m/negsamples1.csv", "data/sub_ml-1m/test.csv", 100, 0.1, 0, 0.01)
+
 function BPR_subsample(train_positive, train_negative, test, r, lambda, epochSize, stepsize)
     X_pos = readdlm(train_positive, ',' );
     xpos = vec( round(Int64, X_pos[:,1]) );
