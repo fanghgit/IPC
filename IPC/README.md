@@ -1,4 +1,4 @@
-#Experimental code for Implicit Preference Completion
+# Experimental code for Implicit Preference Completion
 
 ## Description:
 - data folder: sub_ml-1m, a subset of ml-1m, positive samples: "train_positive.csv", negative samples: "negsamplesX.csv", test samples: "test.csv", validation samples: "validation.csv".
@@ -6,7 +6,7 @@
 - code folder: primalCRpp.jl, BPR.jl
 
 
-##Quick start for experiments:
+## Quick start for experiments:
 Inital setting: rank = 100, lambda = 0.1, stepsize = 0.01
 1. To run BPR with full data:
 	```
